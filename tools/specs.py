@@ -1,0 +1,19 @@
+KAV={'lower':['legL','legR'],'upper':['cape','torso','head'],'parts':{
+ 'cape':dict(src=('kav',4),f=.42,pvr=(.5,.04),pos=(-16,-100)),
+ 'torso':dict(src=('kav',3),f=.40,pvr=(.5,.93),pos=(0,0)),
+ 'head':dict(src=('kav',2),f=.42,pvr=(.52,.85),pos=(0,-102)),
+ 'legL':dict(src=('kav',9),cut='gap',side='L',f=(.50,.25),pvr=(.5,.03),pos=(-20,-18),children=['bootL']),
+ 'legR':dict(src=('kav',9),cut='gap',side='R',f=(.50,.25),pvr=(.5,.03),pos=(20,-18),children=['bootR']),
+ 'bootL':dict(src=('kav',19),f=.36,pvr=(.5,.12),pos=(0,52)),
+ 'bootR':dict(src=('kav',20),f=.36,pvr=(.5,.12),pos=(0,52))}}
+FOE={'lower':['legL','legR'],'upper':['armL','armR','torso','head'],'parts':{
+ 'torso':dict(src=('foe',9),f=.40,pvr=(.5,.9),pos=(0,0)),
+ 'head':dict(src=('foe',2),f=.40,pvr=(.5,.85),pos=(0,-84)),
+ 'armL':dict(src=('foe',7),f=.40,pvr=(.5,.1),pos=(-50,-72),children=['foreL']),
+ 'foreL':dict(src=('foe',24),f=.36,pvr=(.5,.2),pos=(0,32)),
+ 'armR':dict(src=('foe',8),f=.40,pvr=(.5,.1),pos=(50,-72),children=['foreR']),
+ 'foreR':dict(src=('foe',25),f=.36,pvr=(.5,.2),pos=(0,32)),
+ 'legL':dict(src=('foe',28),cut='gap',side='L',f=(.40,.24),pvr=(.5,.03),pos=(-16,-14),children=['bootL']),
+ 'legR':dict(src=('foe',28),cut='gap',side='R',f=(.40,.24),pvr=(.5,.03),pos=(16,-14),children=['bootR']),
+ 'bootL':dict(src=('foe',31),f=.36,pvr=(.5,.1),pos=(0,44)),
+ 'bootR':dict(src=('foe',32),f=.36,pvr=(.5,.1),pos=(0,44))}}

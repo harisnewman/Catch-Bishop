@@ -1,0 +1,22 @@
+{
+  "name": "kaveh-game",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kaveh - مرحلهٔ اول (بازی موبایل با Phaser و Capacitor)",
+  "scripts": {
+    "prepare:web": "node scripts/copy-phaser.js",
+    "test": "node tests/sim.test.js",
+    "android:add": "npm run prepare:web && cap add android && node scripts/patch-android.js && cap sync android",
+    "sync": "npm run prepare:web && cap sync android && node scripts/patch-android.js",
+    "android:open": "cap open android",
+    "android:run": "cap run android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "phaser": "3.80.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}
