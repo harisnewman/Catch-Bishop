@@ -50,7 +50,7 @@ const OUT = '#2a1630';
 function mkcv(w,h){ const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.lineJoin = x.lineCap = 'round'; return [c,x]; }
 function addTex(sc,key,c){ if(sc.textures.exists(key)) sc.textures.remove(key); sc.textures.addCanvas(key,c); }
 function makeTex(sc){
-  let [c,x] = mkcv(72,72); x.lineWidth = 5; x.strokeStyle = OUT; x.fillStyle = '#d49a54'; x.beginPath(); x.roundRect(4,4,64,64,6); x.fill(); x.stroke();
+  let [c,x] = mkcv(72,72); x.lineWidth = 5; x.strokeStyle = OUT; x.fillStyle = '#d49a54'; x.beginPath(); x.moveTo(10,4); x.arcTo(68,4,68,68,6); x.arcTo(68,68,4,68,6); x.arcTo(4,68,4,4,6); x.arcTo(4,4,68,4,6); x.closePath(); x.fill(); x.stroke();
   x.fillStyle = '#b87a38'; [20,36,52].forEach(y => x.fillRect(8,y,56,3)); x.strokeStyle = '#8a5424'; x.lineWidth = 4; x.beginPath(); x.moveTo(10,10); x.lineTo(62,62); x.moveTo(62,10); x.lineTo(10,62); x.stroke(); addTex(sc,'box',c);
   [c,x] = mkcv(8,8); x.fillStyle = '#fff'; x.beginPath(); x.arc(4,4,4,0,7); x.fill(); addTex(sc,'dot',c);
   [['bL','◀'],['bR','▶'],['bJ','▲']].forEach(([k,t]) => { const [cc,xx] = mkcv(72,72); xx.lineWidth = 5; xx.strokeStyle = OUT; xx.fillStyle = '#fff4e0'; xx.beginPath(); xx.arc(36,36,31,0,7); xx.fill(); xx.stroke(); xx.fillStyle = OUT; xx.font = '26px sans-serif'; xx.textAlign = 'center'; xx.textBaseline = 'middle'; xx.fillText(t,36,38); addTex(sc,k,cc); });
@@ -234,11 +234,12 @@ function update(t,dt){ try{ _update.call(this,t,dt); }catch(er){ if(_ue++ < 3) s
 
 /* ============ رابط ============ */
 const ov = document.getElementById('ov');
-function show(html){ ov.innerHTML = `<div class="card">${html}</div>`; ov.hidden = false; L = R = J = false; }
+function show(html,bare){ ov.innerHTML = `<div class="card${bare?' bare':''}">${html}</div>`; ov.hidden = false; L = R = J = false; }
 function startGame(){ ac(); startMusic(); SFX.start(); ov.hidden = true; started = true; showHint(); }
 function again(){ ov.hidden = true; started = true; game.scene.getScene('main').scene.restart(); }
 function boot(){
   game = new Phaser.Game({type:Phaser.AUTO,parent:'g',width:640,height:360,backgroundColor:'#7cc4f5',scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:{key:'main',create,update}});
-  show(`<button class="big" onclick="startGame()">شروع</button>`);
+  show(`<button class="big" onclick="startGame()">شروع</button>`,true);
 }
-Promise.all([loadArt(),Promise.race([document.fonts.load('16px Vazirmatn'),document.fonts.load('40px Lalezar'),new Promise(r => setTimeout(r,1500))])]).then(boot,boot);
+const fl = f => (document.fonts && document.fonts.load) ? document.fonts.load(f).catch(() => 0) : Promise.resolve();
+Promise.all([loadArt(),Promise.race([Promise.all([fl('16px Vazirmatn'),fl('40px Lalezar')]),new Promise(r => setTimeout(r,1500))])]).then(boot,boot);
