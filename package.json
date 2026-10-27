@@ -6,8 +6,8 @@
   "scripts": {
     "prepare:web": "node scripts/copy-phaser.js",
     "test": "node tests/sim.test.js",
-    "android:add": "npm run prepare:web && cap add android && node scripts/patch-android.js && cap sync android",
-    "sync": "npm run prepare:web && cap sync android && node scripts/patch-android.js",
+    "android:add": "node scripts/ensure-android.js",
+    "sync": "node scripts/ensure-android.js",
     "android:open": "cap open android",
     "android:run": "cap run android"
   },
