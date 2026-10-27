@@ -18,19 +18,9 @@ function noise(d,v=.1,f0=2000,f1=0,type='lowpass',t0=0){
   s.buffer = AC.nb; s.loop = true; fl.type = type; fl.frequency.setValueAtTime(f0,t); if(f1) fl.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+d);
   g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.001,t+d); s.connect(fl); fl.connect(g); g.connect(AC.out); s.start(t); s.stop(t+d);
 }
-function mumble(){   // غرغر نامفهوم: چند هجای بم با فرمنت‌های تصادفی
-  const c = ac(); if(!c || AC.mute) return; const n = 5+Math.floor(Math.random()*5); let t = c.currentTime+.02;
-  for(let i=0;i<n;i++){
-    const d = .11+Math.random()*.13, f0 = 80+Math.random()*30, o = c.createOscillator(), g = c.createGain();
-    o.type = 'sawtooth'; o.frequency.setValueAtTime(f0,t); o.frequency.linearRampToValueAtTime(f0*(.82+Math.random()*.36),t+d);
-    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.5,t+.025); g.gain.linearRampToValueAtTime(0,t+d);
-    [[300+Math.random()*450,6],[900+Math.random()*900,8]].forEach(([f,q]) => { const b = c.createBiquadFilter(); b.type = 'bandpass'; b.frequency.value = f; b.Q.value = q; o.connect(b); b.connect(g); });
-    g.connect(AC.out); o.start(t); o.stop(t+d+.02); t += d+.03+Math.random()*.06;
-  }
-}
 const SFX = {
   jump:()=>tone(280,.2,'square',.05,420), land:()=>{tone(110,.1,'triangle',.12,-50); noise(.08,.05,500)}, step:()=>noise(.04,.035,900),
-  scrape:()=>noise(.12,.05,380,0,'bandpass'), place:()=>{tone(180,.12,'triangle',.12,-60); noise(.06,.06,700)},
+  scrape:()=>noise(.12,.05,380,0,'bandpass'),
   launch:()=>{tone(160,.32,'sine',.16,620,0,25); noise(.5,.09,400,3500,'bandpass',.05)},
   hit:()=>{noise(.12,.18,6000,0,'highpass'); noise(.9,.3,2600,70); tone(90,.7,'sine',.35,-60)},
   ghost:()=>tone(260,1.8,'sine',.09,520,.1,18), thud:()=>{tone(90,.15,'triangle',.18,-40); noise(.1,.08,300)},
@@ -50,14 +40,15 @@ const OUT = '#2a1630';
 function mkcv(w,h){ const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.lineJoin = x.lineCap = 'round'; return [c,x]; }
 function addTex(sc,key,c){ if(sc.textures.exists(key)) sc.textures.remove(key); sc.textures.addCanvas(key,c); }
 function makeTex(sc){
-  let [c,x] = mkcv(72,72); x.lineWidth = 5; x.strokeStyle = OUT; x.fillStyle = '#d49a54'; x.beginPath(); x.moveTo(10,4); x.arcTo(68,4,68,68,6); x.arcTo(68,68,4,68,6); x.arcTo(4,68,4,4,6); x.arcTo(4,4,68,4,6); x.closePath(); x.fill(); x.stroke();
-  x.fillStyle = '#b87a38'; [20,36,52].forEach(y => x.fillRect(8,y,56,3)); x.strokeStyle = '#8a5424'; x.lineWidth = 4; x.beginPath(); x.moveTo(10,10); x.lineTo(62,62); x.moveTo(62,10); x.lineTo(10,62); x.stroke(); addTex(sc,'box',c);
-  [c,x] = mkcv(8,8); x.fillStyle = '#fff'; x.beginPath(); x.arc(4,4,4,0,7); x.fill(); addTex(sc,'dot',c);
-  [['bL','◀'],['bR','▶'],['bJ','▲']].forEach(([k,t]) => { const [cc,xx] = mkcv(72,72); xx.lineWidth = 5; xx.strokeStyle = OUT; xx.fillStyle = '#fff4e0'; xx.beginPath(); xx.arc(36,36,31,0,7); xx.fill(); xx.stroke(); xx.fillStyle = OUT; xx.font = '26px sans-serif'; xx.textAlign = 'center'; xx.textBaseline = 'middle'; xx.fillText(t,36,38); addTex(sc,k,cc); });
-  [[170,70],[210,80],[150,62]].forEach(([w,h],i) => { const [cc,xx] = mkcv(w,h); xx.fillStyle = '#fff';
+  let [c,x] = mkcv(144,144); x.lineWidth = 10; x.strokeStyle = OUT; x.fillStyle = '#d49a54'; x.beginPath(); x.moveTo(20,8); x.arcTo(136,8,136,136,12); x.arcTo(136,136,8,136,12); x.arcTo(8,136,8,8,12); x.arcTo(8,8,136,8,12); x.closePath(); x.fill(); x.stroke();
+  x.fillStyle = '#b87a38'; [40,72,104].forEach(y => x.fillRect(16,y,112,6)); x.strokeStyle = '#8a5424'; x.lineWidth = 8; x.beginPath(); x.moveTo(20,20); x.lineTo(124,124); x.moveTo(124,20); x.lineTo(20,124); x.stroke(); addTex(sc,'box',c);
+  [['dotW','#ffffff'],['dotC','#fff4e0'],['dotY','#ffe14d'],['dotO','#ff9b2f'],['dotR','#ff5a2a'],['dotK','#3a3a44'],['dotG','#8a8a99']].forEach(([k,col]) => { const [cc,xx] = mkcv(8,8); xx.fillStyle = col; xx.beginPath(); xx.arc(4,4,4,0,7); xx.fill(); addTex(sc,k,cc); });
+  [['bL','◀'],['bR','▶'],['bJ','▲']].forEach(([k,t]) => { const [cc,xx] = mkcv(144,144); xx.lineWidth = 9; xx.strokeStyle = OUT; xx.fillStyle = '#fff4e0'; xx.beginPath(); xx.arc(72,72,62,0,7); xx.fill(); xx.stroke(); xx.fillStyle = OUT; xx.font = '52px sans-serif'; xx.textAlign = 'center'; xx.textBaseline = 'middle'; xx.fillText(t,72,76); addTex(sc,k,cc); });
+  [[170,70],[210,80],[150,62]].forEach(([w,h],i) => { const [cc,xx] = mkcv(w*2,h*2); xx.scale(2,2); xx.fillStyle = '#fff';
     xx.beginPath(); xx.ellipse(w*.3,h*.62,w*.22,h*.3,0,0,7); xx.ellipse(w*.5,h*.45,w*.24,h*.38,0,0,7); xx.ellipse(w*.7,h*.6,w*.22,h*.3,0,0,7); xx.rect(w*.12,h*.6,w*.76,h*.3); xx.fill();
     xx.fillStyle = 'rgba(150,190,235,.35)'; xx.fillRect(w*.12,h*.78,w*.76,h*.12); addTex(sc,'cloud'+i,cc); });
   const [sk,sx] = mkcv(4,360); const g = sx.createLinearGradient(0,0,0,300); g.addColorStop(0,'#3d9be9'); g.addColorStop(1,'#bfe7ff'); sx.fillStyle = g; sx.fillRect(0,0,4,360); addTex(sc,'sky',sk);
+  const [bm,bx] = mkcv(320,140); bx.font = '900 96px Impact, "Arial Black", sans-serif'; bx.textAlign = 'center'; bx.textBaseline = 'middle'; bx.lineWidth = 16; bx.strokeStyle = '#7a1d0c'; bx.strokeText('BOOM!',160,72); bx.fillStyle = '#ffd23f'; bx.fillText('BOOM!',160,72); addTex(sc,'boomtxt',bm);
 }
 
 /* ============ اسکلت (تکه‌ها) ============ */
@@ -73,23 +64,21 @@ function buildRig(sc,key,H){
 function ease(r,T){ const q = r.cur; for(const k in T){ if(q[k] === undefined) q[k] = T[k]; q[k] += (T[k]-q[k])*.3; } return q; }
 function animK(r,t,st,vy){
   const ph = t*(st==='push'?.011:.014), s = Math.sin(ph), c = Math.cos(ph); let T;
-  if(st === 'walk') T = {lean:.07+s*.03,head:Math.sin(ph*2)*.03,legL:.45*s,legR:-.45*s,bootL:Math.max(0,c)*.5,bootR:Math.max(0,-c)*.5,cape:.28+s*.06,by:-Math.abs(s)*2.4};
-  else if(st === 'push') T = {lean:.2,head:.05,legL:.35*s,legR:-.35*s,bootL:.1,bootR:.1,cape:.4,by:-Math.abs(s)*1.5};
-  else if(st === 'air') T = vy < 0 ? {lean:.05,head:0,legL:.55,legR:-.3,bootL:.5,bootR:.3,cape:-.15,by:0} : {lean:.02,head:0,legL:.25,legR:-.25,bootL:.1,bootR:.1,cape:-.3,by:0};
+  if(st === 'walk') T = {lean:.07+s*.03,head:Math.sin(ph*2)*.03,legL:.2*s,legR:-.2*s,bootL:Math.max(0,c)*.18,bootR:Math.max(0,-c)*.18,cape:.28+s*.06,by:-Math.abs(s)*1.6};
+  else if(st === 'push') T = {lean:.2,head:.05,legL:.15*s,legR:-.15*s,bootL:.05,bootR:.05,cape:.4,by:-Math.abs(s)*1.0};
+  else if(st === 'air') T = vy < 0 ? {lean:.05,head:0,legL:.25,legR:-.15,bootL:.2,bootR:.1,cape:-.15,by:0} : {lean:.02,head:0,legL:.1,legR:-.1,bootL:.05,bootR:.05,cape:-.3,by:0};
   else { const b = Math.sin(t*.004); T = {lean:0,head:b*.02,legL:0,legR:0,bootL:0,bootR:0,cape:b*.04,by:b*.8}; }
   const q = ease(r,T), n = r.n;
   n.legL.rotation = q.legL; n.legR.rotation = q.legR; n.bootL.rotation = q.bootL; n.bootR.rotation = q.bootR; n.head.rotation = q.head; n.cape.rotation = q.cape; r.up.rotation = q.lean; r.up.y = q.by;
 }
-function animE(r,t,st){
-  const ph = t*.010, s = Math.sin(ph); let T;
-  if(st === 'talk'){ const j = Math.sin(t*.05), g = Math.sin(t*.03); T = {lean:-.03,head:j*.09,legL:0,legR:0,bootL:0,bootR:0,armL:.55+g*.25,armR:-.55-Math.sin(t*.03+1)*.25,foreL:-.3,foreR:.3,by:Math.abs(j)*-1.6}; }
-  else T = {lean:.03,head:Math.sin(ph*2)*.02,legL:.32*s,legR:-.32*s,bootL:.15,bootR:.15,armL:-.35*s+.05,armR:-.35*s-.05,foreL:0,foreR:0,by:-Math.abs(s)*1.4};
+function animE(r,t){
+  const ph = t*.010, s = Math.sin(ph);
+  const T = {lean:.03,head:Math.sin(ph*2)*.02,legL:.3*s,legR:-.3*s,bootL:.15,bootR:.15,by:-Math.abs(s)*1.4};
   const q = ease(r,T), n = r.n;
-  ['legL','legR','bootL','bootR','armL','armR','foreL','foreR','head'].forEach(k => n[k].rotation = q[k]); r.up.rotation = q.lean; r.up.y = q.by;
+  ['legL','legR','bootL','bootR','head'].forEach(k => n[k].rotation = q[k]); r.up.rotation = q.lean; r.up.y = q.by;   // دست‌ها ثابت‌اند
 }
 
 /* ============ بازی ============ */
-const FONT = 'Vazirmatn, Tahoma, sans-serif';
 let game, sc, S, started = false, L = false, R = false, J = false, acc = 0, cursors, keys, won = false, T;
 const IMG = {};
 function loadArt(){ return Promise.all(Object.entries(ART).map(([k,src]) => new Promise(r => { const i = new Image(); i.onload = () => { IMG[k] = i; r(); }; i.onerror = r; i.src = src; }))); }
@@ -98,6 +87,7 @@ function _create(){
   sc = this; S = newState(); won = false; acc = 0; T = {};
   Object.keys(IMG).forEach(k => { if(!this.textures.exists(k)) this.textures.addImage(k,IMG[k]); });
   makeTex(this);
+  this.cameras.main.setZoom(2).centerOn(320,180);
   this.input.addPointer(2); cursors = this.input.keyboard.createCursorKeys();
   keys = this.input.keyboard.addKeys('W,A,D,SPACE');
 
@@ -121,10 +111,9 @@ function _create(){
   T.hero = buildRig(this,'K',56); T.hero.outer.setDepth(8);
   T.box = this.add.image(0,0,'box').setScale(.5).setDepth(7);
   T.ghost = this.add.image(0,0,'ghost').setScale(64/240).setDepth(9).setVisible(false);
-  T.dust = this.add.particles(0,0,'dot',{lifespan:400,speed:{min:20,max:70},angle:{min:200,max:340},scale:{start:.9,end:0},alpha:{start:.8,end:0},tint:0xfff4e0,emitting:false}).setDepth(9);
-  T.boom = this.add.particles(0,0,'dot',{lifespan:{min:500,max:1100},speed:{min:80,max:340},angle:{min:0,max:360},gravityY:260,scale:{start:2,end:0},tint:[0xffe14d,0xff9b2f,0xff5a2a,0x333333,0xffffff],emitting:false}).setDepth(12);
-  T.smoke = this.add.particles(0,0,'dot',{lifespan:1200,speed:{min:10,max:50},angle:{min:240,max:300},scale:{start:3,end:7},alpha:{start:.45,end:0},tint:0x666677,emitting:false}).setDepth(11);
-  T.puff = this.add.particles(0,0,'dot',{lifespan:700,speed:{min:15,max:40},angle:{min:230,max:310},scale:{start:1.3,end:.2},alpha:{start:.8,end:0},tint:0xffffff,emitting:false}).setDepth(10);
+  T.dust = this.add.particles(0,0,'dotC',{lifespan:400,speed:{min:20,max:70},angle:{min:200,max:340},scale:{start:.9,end:0},alpha:{start:.8,end:0},emitting:false}).setDepth(9);
+  T.booms = ['dotY','dotO','dotR','dotW','dotK'].map(k => this.add.particles(0,0,k,{lifespan:{min:500,max:1100},speed:{min:80,max:340},angle:{min:0,max:360},gravityY:260,scale:{start:2,end:0},emitting:false}).setDepth(12));
+  T.smoke = this.add.particles(0,0,'dotG',{lifespan:1200,speed:{min:10,max:50},angle:{min:240,max:300},scale:{start:3,end:7},alpha:{start:.45,end:0},emitting:false}).setDepth(11);
   // پرنده
   const bd = this.add.container(0,0).setDepth(4); const bg = this.add.graphics(); bg.fillStyle(0x2a1630).fillEllipse(0,0,9,6).fillTriangle(-4,0,-9,-2,-9,2).fillCircle(4,-2,2.5); bg.fillStyle(0xffb020).fillTriangle(6,-2,9,-1,6,0);
   const wing = this.add.graphics().lineStyle(2,0x2a1630).lineBetween(0,0,0,-7).lineBetween(0,0,-3,-6); bd.add([bg,wing]);
@@ -133,35 +122,28 @@ function _create(){
   const btn = (x,k,set) => { const b = this.add.image(x,331,k).setDepth(20).setAlpha(.9).setScale(.74).setInteractive();
     b.on('pointerdown',() => { set(true); b.setScale(.66); }); const up = () => { set(false); b.setScale(.74); }; b.on('pointerup',up); b.on('pointerout',up); b.on('pointerupoutside',up); };
   btn(44,'bL',v => L = v); btn(108,'bR',v => R = v); btn(596,'bJ',v => J = v);
-  T.hint = this.add.text(320,22,'جعبه را روی سر پایین الاکلنگ هل بده، بعد روی سر بالایی بپر!',{fontFamily:FONT,fontSize:'14px',color:'#2a1630',backgroundColor:'#fff4e0',padding:{x:12,y:6}}).setOrigin(.5).setDepth(20).setAlpha(0);
-  T.toast = this.add.text(320,60,'',{fontFamily:FONT,fontSize:'15px',color:'#fff',backgroundColor:'#2a1630',padding:{x:12,y:5}}).setOrigin(.5).setDepth(20).setAlpha(0);
-  T.mt = 0; T.eT = 0; T.stepT = 0; T.scrT = 0; T.wonT = -1;
-  if(started) showHint();
+  T.stepT = 0;
 }
-function showHint(){ sc.tweens.add({targets:T.hint,alpha:1,duration:300}); sc.time.delayedCall(9000,() => sc.tweens.add({targets:T.hint,alpha:0,duration:600})); }
-function toast(msg){ T.toast.setText(msg).setAlpha(1); sc.tweens.killTweensOf(T.toast); sc.tweens.add({targets:T.toast,alpha:0,delay:1800,duration:500}); }
 function dust(x,y,n=6){ T.dust.emitParticleAt(x,y,n); }
 
 function onEv(e){
   const h = S.hero;
   if(e.t === 'jump'){ SFX.jump(); dust(h.x,h.y); }
   else if(e.t === 'land'){ if(e.imp > 220){ SFX.land(); dust(h.x,h.y,7); } }
-  else if(e.t === 'place') SFX.place();
   else if(e.t === 'launch'){ SFX.launch(); sc.cameras.main.shake(140,.007); sc.tweens.add({targets:T.plank,scaleY:1.15,duration:70,yoyo:true}); }
   else if(e.t === 'hit') boom(e.x,e.y);
-  else if(e.t === 'miss'){ SFX.miss(); toast('نخورد! یک جعبهٔ دیگر می‌افتد'); }
+  else if(e.t === 'miss'){ SFX.miss(); }
   else if(e.t === 'thud'){ SFX.thud(); dust(S.box.x,GY,5); }
   else if(e.t === 'newbox') SFX.newbox();
   else if(e.t === 'wall') SFX.wall();
-  else if(e.t === 'grumble' && started) mumble();
 }
 function boom(x,y){
   SFX.hit(); sc.cameras.main.shake(380,.02);
   const f = sc.add.circle(x,y,18,0xffffff,1).setDepth(13); sc.tweens.add({targets:f,scale:6,alpha:0,duration:320,onComplete:() => f.destroy()});
   const r = sc.add.circle(x,y,12).setStrokeStyle(5,0xffd23f).setDepth(13); sc.tweens.add({targets:r,scale:9,alpha:0,duration:520,onComplete:() => r.destroy()});
-  T.boom.emitParticleAt(x,y,70); T.smoke.emitParticleAt(x,y,14);
-  const tx = sc.add.text(x,y-30,'بووم!',{fontFamily:'Lalezar, Vazirmatn, sans-serif',fontSize:'40px',color:'#ffd23f',stroke:'#7a1d0c',strokeThickness:7}).setOrigin(.5).setDepth(14).setScale(.2).setAngle(-8);
-  sc.tweens.add({targets:tx,scale:1.2,duration:220,ease:'Back.easeOut'}); sc.tweens.add({targets:tx,alpha:0,y:y-70,delay:700,duration:500,onComplete:() => tx.destroy()});
+  T.booms.forEach(p => p.emitParticleAt(x,y,14)); T.smoke.emitParticleAt(x,y,14);
+  const tx = sc.add.image(x,y-30,'boomtxt').setDepth(14).setScale(.08).setAngle(-8);
+  sc.tweens.add({targets:tx,scale:.34,duration:220,ease:'Back.easeOut'}); sc.tweens.add({targets:tx,alpha:0,y:y-70,delay:700,duration:500,onComplete:() => tx.destroy()});
   T.enemy.outer.setVisible(false);
   sc.time.delayedCall(260,() => ghostFly(x,y));
 }
@@ -170,7 +152,7 @@ function ghostFly(x,y){
   sc.tweens.add({targets:gh,alpha:1,scale:64/240,duration:350,ease:'Back.easeOut'});
   T.gAct = true; sc.time.delayedCall(3600,() => { if(!won){ won = true; SFX.win(); showWin(); } });
 }
-function showWin(){ show(`<div class="sub" style="font-size:36px">مرحلهٔ اول کامل شد! 🎉</div><p class="tag">روح اسقف پرواز کرد و رفت 👻</p><button class="big" onclick="again()">دوباره بازی کن</button>`); }
+function showWin(){ show(`<div class="sub">LEVEL 1 COMPLETE 🎉</div><p class="tag">👻</p><button class="big" onclick="again()">↻ PLAY AGAIN</button>`); }
 
 function _update(t,dt){
   const sec = dt/1000;
@@ -196,11 +178,7 @@ function _update(t,dt){
   }
   // دشمن
   if(e.alive){
-    const talk = e.pause > 0; T.enemy.outer.setPosition(e.x,ROOF+2); T.enemy.inner.scaleX = e.dir; animE(T.enemy,t,talk ? 'talk' : 'walk');
-    if(talk){ T.eT -= dt; if(T.eT <= 0){ T.eT = 420; const sy = ['#@%!','غرررر','هوم!؟','&%$#','بلبل!؟'][Math.floor(Math.random()*5)];
-        const tx = sc.add.text(e.x+(Math.random()*30-10),ROOF-62,sy,{fontFamily:FONT,fontSize:'13px',color:'#c0191b',stroke:'#fff',strokeThickness:4}).setOrigin(.5).setDepth(14);
-        sc.tweens.add({targets:tx,y:tx.y-24,alpha:0,duration:900,onComplete:() => tx.destroy()}); T.puff.emitParticleAt(e.x-18,ROOF-36,2); T.puff.emitParticleAt(e.x+18,ROOF-36,2);
-        const an = sc.add.text(e.x+20,ROOF-56,'💢',{fontSize:'16px'}).setOrigin(.5).setDepth(14); sc.tweens.add({targets:an,scale:1.5,alpha:0,duration:600,onComplete:() => an.destroy()}); } }
+    T.enemy.outer.setPosition(e.x,ROOF+2); T.enemy.inner.scaleX = e.dir; animE(T.enemy,t);
   }
   // روح
   if(T.gAct){ T.gt += sec; const u = T.gt/3.4; T.ghost.setPosition(T.gx-u*u*260+Math.sin(T.gt*4)*14,T.gy-u*210-Math.sin(T.gt*2)*4).setRotation(Math.sin(T.gt*4)*.12);
@@ -235,11 +213,10 @@ function update(t,dt){ try{ _update.call(this,t,dt); }catch(er){ if(_ue++ < 3) s
 /* ============ رابط ============ */
 const ov = document.getElementById('ov');
 function show(html,bare){ ov.innerHTML = `<div class="card${bare?' bare':''}">${html}</div>`; ov.hidden = false; L = R = J = false; }
-function startGame(){ ac(); startMusic(); SFX.start(); ov.hidden = true; started = true; showHint(); }
+function startGame(){ ac(); startMusic(); SFX.start(); ov.hidden = true; started = true; }
 function again(){ ov.hidden = true; started = true; game.scene.getScene('main').scene.restart(); }
 function boot(){
-  game = new Phaser.Game({type:Phaser.AUTO,parent:'g',width:640,height:360,backgroundColor:'#7cc4f5',scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:{key:'main',create,update}});
-  show(`<button class="big" onclick="startGame()">شروع</button>`,true);
+  game = new Phaser.Game({type:Phaser.CANVAS,parent:'g',width:1280,height:720,backgroundColor:'#7cc4f5',scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:{key:'main',create,update}});
+  show(`<button class="big" onclick="startGame()">▶ START</button>`,true);
 }
-const fl = f => (document.fonts && document.fonts.load) ? document.fonts.load(f).catch(() => 0) : Promise.resolve();
-Promise.all([loadArt(),Promise.race([Promise.all([fl('16px Vazirmatn'),fl('40px Lalezar')]),new Promise(r => setTimeout(r,1500))])]).then(boot,boot);
+loadArt().then(boot,boot);
