@@ -1,7 +1,7 @@
 // تست فیزیک (بدون مرورگر): npm test
 const fs = require('fs'), path = require('path');
 const src = fs.readFileSync(path.join(__dirname, '..', 'www', 'sim.js'), 'utf8');
-const L = new Function(src + ';return {newState,stepWorld,stepBox,tryLaunch,PX,A0,GY,EMIN,EMAX,BOX,plankY};')();
+const L = new Function(src + ';return {newState,stepWorld,stepBox,tryLaunch,PX,A0,GY,EMIN,EMAX,BOX,plankY,plankR};')();
 let fail = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fail++; };
 const rng = seed => { let x = seed; return () => (x = (x * 16807) % 2147483647) / 2147483647; };
 
@@ -41,4 +41,27 @@ ok(all, 'فرود قوی در همهٔ جاهای دشمن می‌زند');
 ok(shot(150, 575) === 'nolaunch', 'فرود خیلی ضعیف جعبه را پرتاب نمی‌کند');
 let weak = 0; for (let ex = L.EMIN; ex <= L.EMAX; ex += 6) if (shot(200, ex) === 'hit') weak++;
 ok(weak === 0, 'فرود ضعیف کوتاه می‌آید');
+
+// جعبه نباید زیر الاکلنگ برود (از سمت راست هل بدهیم)
+(function () {
+  const S = L.newState(); S.box.x = 470; S.hero.x = 500;
+  for (let i = 0; i < 60 * 8; i++) L.stepWorld(S, 1 / 60, { left: true });
+  ok(S.box.x > L.plankR(S.plank.a) + 10 && S.box.y >= L.GY - 1, 'جعبه از سمت راست زیر الاکلنگ نمی‌رود');
+})();
+// جعبه از چپ روی الاکلنگ بالا می‌رود (نه زیر آن)
+(function () {
+  const S = L.newState(); for (let i = 0; i < 60 * 1.3; i++) L.stepWorld(S, 1 / 60, { right: true });
+  ok(S.box.y < L.GY - 10 && S.box.x > 255, 'جعبه روی شیب الاکلنگ بالا می‌رود');
+})();
+// طناب: به کاوهٔ ایستاده می‌خورد، به کاوهٔ فراری نه
+function ropeRun(move) {
+  Math.random = rng(5); const S = L.newState(); S.active = true; S.throwT = .1; S.hero.x = 200; let dead = false, thrown = false;
+  for (let i = 0; i < 60 * 4 && !dead; i++) {
+    const inp = {}; if (move && thrown) inp.left = true;
+    L.stepWorld(S, 1 / 60, inp); for (const e of S.ev) { if (e.t === 'throw') thrown = true; if (e.t === 'death') dead = true; }
+  }
+  return dead;
+}
+ok(ropeRun(false) === true, 'طناب به کاوهٔ ایستاده می‌خورد و می‌میرد');
+ok(ropeRun(true) === false, 'کاوه با دویدن از طناب فرار می‌کند');
 process.exit(fail ? 1 : 0);

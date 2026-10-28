@@ -4,14 +4,15 @@ import sys, os, json, io, base64
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np, cv2
 from PIL import Image
-from rigs import build
-from specs import KAV, FOE
+from rigs import crop
+from split_sprites import split_char
 from seg import load, comps
 def b64(im, q=88):
     b = io.BytesIO(); im.save(b, 'WEBP', quality=q, method=6); return 'data:image/webp;base64,' + base64.b64encode(b.getvalue()).decode()
 art, out = {}, {}
-for key, spec in (('K', KAV), ('F', FOE)):
-    parts, imgs = build(spec)
+# کاوه و دشمن از «تصویر کامل» ساخته می‌شوند؛ فقط پاها جدا می‌شوند تا تکرار لباس نداشته باشیم
+for key, args in (('K', ('kav', 1, 392, 86, 200, .5)), ('F', ('foe', 1, 424, 40, 190, .5))):
+    spec, parts, imgs, gap = split_char(*args)
     out[key] = {'lower': spec['lower'], 'upper': spec['upper'],
                 'parts': {n: {'w': p['w'], 'h': p['h'], 'pv': p['pv'], 'pos': list(p['pos']), 'ch': p['children']} for n, p in parts.items()}}
     for n, im in imgs.items(): art[key + '_' + n] = b64(im)

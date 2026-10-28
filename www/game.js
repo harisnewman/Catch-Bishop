@@ -26,14 +26,19 @@ const SFX = {
   ghost:()=>tone(260,1.8,'sine',.09,520,.1,18), thud:()=>{tone(90,.15,'triangle',.18,-40); noise(.1,.08,300)},
   miss:()=>[392,330,262].forEach((f,i)=>tone(f,.28,'triangle',.1,-20,i*.2)), newbox:()=>noise(.5,.06,3000,300,'bandpass'),
   win:()=>[523,659,784,1047,1319].forEach((f,i)=>tone(f,.28,'triangle',.12,0,i*.12)), wall:()=>tone(140,.1,'square',.06,-40),
-  chirp:()=>{tone(3400,.07,'sine',.018,700); tone(3900,.08,'sine',.018,-600,.09)}, start:()=>[392,523].forEach((f,i)=>tone(f,.16,'triangle',.1,0,i*.1))
+  chirp:()=>{tone(3400,.07,'sine',.018,700); tone(3900,.08,'sine',.018,-600,.09)}, start:()=>[392,523].forEach((f,i)=>tone(f,.16,'triangle',.1,0,i*.1)),
+  tell:()=>tone(300,.3,'sine',.05,120), throw:()=>noise(.35,.07,500,2500,'bandpass'), ropeland:()=>{noise(.08,.07,700); tone(120,.1,'triangle',.08,-40)},
+  death:()=>{[330,262,208,165].forEach((f,i)=>tone(f,.3,'triangle',.11,-25,i*.18)); noise(.4,.08,2000,200)}
 };
 let mus = null;
-function startMusic(){
-  if(mus) return; const seq = [262,330,392,330,294,392,440,392,262,330,392,523,440,392,330,294]; let n = 0;
-  mus = setInterval(() => { if(document.hidden) return; const f = seq[n++%seq.length]; tone(f,.4,'triangle',.022); if(n%4===1) tone(f/2,.9,'sine',.035); },340);
+function startMusic(){   // موسیقی = فایل اذان (www/adhan.mp3)؛ اگر فایل نباشد ساکت می‌ماند
+  if(mus) return; mus = 'loading';
+  fetch('adhan.mp3').then(r => { if(!r.ok) throw 0; return r.arrayBuffer(); })
+    .then(b => new Promise((res,rej) => ac().decodeAudioData(b,res,rej)))
+    .then(buf => { const c = ac(), src = c.createBufferSource(), g = c.createGain(); src.buffer = buf; src.loop = true; g.gain.value = AC.mute ? 0 : .6; src.connect(g); g.connect(AC.out); src.start(); AC.mg = g; mus = 'file'; })
+    .catch(() => { mus = 'none'; });
 }
-function toggleMute(){ AC.mute = !AC.mute; document.getElementById('mute').textContent = AC.mute ? '🔇' : '🔊'; }
+function toggleMute(){ AC.mute = !AC.mute; if(AC.mg) AC.mg.gain.value = AC.mute ? 0 : .6; document.getElementById('mute').textContent = AC.mute ? '🔇' : '🔊'; }
 
 /* ============ رسم اشیای ساده با بوم ============ */
 const OUT = '#2a1630';
@@ -63,19 +68,17 @@ function buildRig(sc,key,H){
 }
 function ease(r,T){ const q = r.cur; for(const k in T){ if(q[k] === undefined) q[k] = T[k]; q[k] += (T[k]-q[k])*.3; } return q; }
 function animK(r,t,st,vy){
-  const ph = t*(st==='push'?.011:.014), s = Math.sin(ph), c = Math.cos(ph); let T;
-  if(st === 'walk') T = {lean:.07+s*.03,head:Math.sin(ph*2)*.03,legL:.2*s,legR:-.2*s,bootL:Math.max(0,c)*.18,bootR:Math.max(0,-c)*.18,cape:.28+s*.06,by:-Math.abs(s)*1.6};
-  else if(st === 'push') T = {lean:.2,head:.05,legL:.15*s,legR:-.15*s,bootL:.05,bootR:.05,cape:.4,by:-Math.abs(s)*1.0};
-  else if(st === 'air') T = vy < 0 ? {lean:.05,head:0,legL:.25,legR:-.15,bootL:.2,bootR:.1,cape:-.15,by:0} : {lean:.02,head:0,legL:.1,legR:-.1,bootL:.05,bootR:.05,cape:-.3,by:0};
-  else { const b = Math.sin(t*.004); T = {lean:0,head:b*.02,legL:0,legR:0,bootL:0,bootR:0,cape:b*.04,by:b*.8}; }
-  const q = ease(r,T), n = r.n;
-  n.legL.rotation = q.legL; n.legR.rotation = q.legR; n.bootL.rotation = q.bootL; n.bootR.rotation = q.bootR; n.head.rotation = q.head; n.cape.rotation = q.cape; r.up.rotation = q.lean; r.up.y = q.by;
+  const ph = t*(st==='push'?.011:.014), s = Math.sin(ph); let T;
+  if(st === 'walk') T = {lean:.06+s*.035,legL:.28*s,legR:-.28*s,by:-Math.abs(s)*1.8};
+  else if(st === 'push') T = {lean:.16,legL:.2*s,legR:-.2*s,by:-Math.abs(s)*1.0};
+  else if(st === 'air') T = vy < 0 ? {lean:.05,legL:.3,legR:-.18,by:0} : {lean:.02,legL:.12,legR:-.12,by:0};
+  else { const b = Math.sin(t*.004); T = {lean:0,legL:0,legR:0,by:b*.8}; }
+  const q = ease(r,T); r.n.legL.rotation = q.legL; r.n.legR.rotation = q.legR; r.up.rotation = q.lean; r.up.y = q.by;
 }
-function animE(r,t){
+function animE(r,t,tell){
   const ph = t*.010, s = Math.sin(ph);
-  const T = {lean:.03,head:Math.sin(ph*2)*.02,legL:.3*s,legR:-.3*s,bootL:.15,bootR:.15,by:-Math.abs(s)*1.4};
-  const q = ease(r,T), n = r.n;
-  ['legL','legR','bootL','bootR','head'].forEach(k => n[k].rotation = q[k]); r.up.rotation = q.lean; r.up.y = q.by;   // دست‌ها ثابت‌اند
+  const T = tell ? {lean:-.12,legL:0,legR:0,by:0} : {lean:.02+s*.02,legL:.25*s,legR:-.25*s,by:-Math.abs(s)*1.2};
+  const q = ease(r,T); r.n.legL.rotation = q.legL; r.n.legR.rotation = q.legR; r.up.rotation = q.lean; r.up.y = q.by;   // دست‌ها ثابت‌اند
 }
 
 /* ============ بازی ============ */
@@ -109,7 +112,9 @@ function _create(){
   // دشمن و قهرمان
   T.enemy = buildRig(this,'F',58); T.enemy.outer.setDepth(6);
   T.hero = buildRig(this,'K',56); T.hero.outer.setDepth(8);
-  T.box = this.add.image(0,0,'box').setScale(.5).setDepth(7);
+  T.box = this.add.image(0,0,'box').setScale(28/144).setDepth(7);
+  T.ropeG = this.add.graphics().setDepth(13);
+  T.kghost = this.add.image(0,0,'ghost').setScale(64/240).setDepth(9).setVisible(false);
   T.ghost = this.add.image(0,0,'ghost').setScale(64/240).setDepth(9).setVisible(false);
   T.dust = this.add.particles(0,0,'dotC',{lifespan:400,speed:{min:20,max:70},angle:{min:200,max:340},scale:{start:.9,end:0},alpha:{start:.8,end:0},emitting:false}).setDepth(9);
   T.booms = ['dotY','dotO','dotR','dotW','dotK'].map(k => this.add.particles(0,0,k,{lifespan:{min:500,max:1100},speed:{min:80,max:340},angle:{min:0,max:360},gravityY:260,scale:{start:2,end:0},emitting:false}).setDepth(12));
@@ -135,6 +140,10 @@ function onEv(e){
   else if(e.t === 'miss'){ SFX.miss(); }
   else if(e.t === 'thud'){ SFX.thud(); dust(S.box.x,GY,5); }
   else if(e.t === 'newbox') SFX.newbox();
+  else if(e.t === 'tell') SFX.tell();
+  else if(e.t === 'throw') SFX.throw();
+  else if(e.t === 'ropeland'){ SFX.ropeland(); dust(e.x,GY,4); }
+  else if(e.t === 'death') onDeath(e.x,e.y);
   else if(e.t === 'wall') SFX.wall();
 }
 function boom(x,y){
@@ -152,12 +161,19 @@ function ghostFly(x,y){
   sc.tweens.add({targets:gh,alpha:1,scale:64/240,duration:350,ease:'Back.easeOut'});
   T.gAct = true; sc.time.delayedCall(3600,() => { if(!won){ won = true; SFX.win(); showWin(); } });
 }
-function showWin(){ show(`<div class="sub">LEVEL 1 COMPLETE 🎉</div><p class="tag">👻</p><button class="big" onclick="again()">↻ PLAY AGAIN</button>`); }
+function onDeath(x,y){
+  SFX.death(); sc.cameras.main.shake(200,.01); T.smoke.emitParticleAt(x,y-20,10); T.hero.outer.setVisible(false);
+  const g = T.kghost.setVisible(true).setPosition(x,y-30).setAlpha(0).setScale(.1); T.kx = x; T.ky = y-30; T.kt = 0; T.kAct = true;
+  sc.tweens.add({targets:g,alpha:1,scale:64/240,duration:350,ease:'Back.easeOut'});
+  sc.time.delayedCall(2800,() => toStart());
+}
+function showWin(){ show(`<div class="sub">LEVEL 1 COMPLETE 🎉</div><p class="tag">👻</p><button class="big" onclick="toStart()">↻ PLAY AGAIN</button>`); }
 
 function _update(t,dt){
   const sec = dt/1000;
   // ورودی و شبیه‌سازی
   const k = keys, inp = started && !won ? {left:L||cursors.left.isDown||k.A.isDown, right:R||cursors.right.isDown||k.D.isDown, jump:J||cursors.up.isDown||k.W.isDown||k.SPACE.isDown} : {};
+  S.active = started && !won;
   acc += Math.min(sec,.05);
   while(acc >= 1/120){ stepWorld(S,1/120,inp); S.ev.forEach(onEv); acc -= 1/120; }
   const h = S.hero, e = S.enemy, b = S.box, p = S.plank;
@@ -171,18 +187,29 @@ function _update(t,dt){
   if(b.st === 'gone') T.box.setVisible(false);
   else {
     T.box.setVisible(true);
-    if(b.st === 'ground'){ T.box.setPosition(b.x,GY-18).setRotation(0); }
-    else if(b.st === 'placed'){ T.box.setPosition(b.x-Math.sin(p.a)*18,plankY(p.a,b.x)-Math.cos(p.a)*18).setRotation(-p.a); }
-    else if(b.st === 'falling'){ T.box.setPosition(b.x,b.y-18).setRotation(0); }
+    if(b.st === 'ground'){
+      if(b.y < GY-1 && plankSurf(S,b.x) < GY+500) T.box.setPosition(b.x-Math.sin(p.a)*14,plankY(p.a,b.x)-Math.cos(p.a)*14).setRotation(-p.a);
+      else T.box.setPosition(b.x,b.y-14).setRotation(0);
+    }
+    else if(b.st === 'falling'){ T.box.setPosition(b.x,b.y-14).setRotation(0); }
     else T.box.setPosition(b.x,b.y).setRotation(b.rot);
   }
   // دشمن
   if(e.alive){
-    T.enemy.outer.setPosition(e.x,ROOF+2); T.enemy.inner.scaleX = e.dir; animE(T.enemy,t);
+    T.enemy.outer.setPosition(e.x,ROOF+2); T.enemy.inner.scaleX = e.dir; animE(T.enemy,t,S.tellT >= 0);
   }
   // روح
   if(T.gAct){ T.gt += sec; const u = T.gt/3.4; T.ghost.setPosition(T.gx-u*u*260+Math.sin(T.gt*4)*14,T.gy-u*210-Math.sin(T.gt*2)*4).setRotation(Math.sin(T.gt*4)*.12);
     if(u > .7) T.ghost.setAlpha(Math.max(0,1-(u-.7)/.3)); }
+  // کاوهٔ روح‌شده
+  if(T.kAct){ T.kt += sec; T.kghost.setPosition(T.kx+Math.sin(T.kt*4)*10,T.ky-T.kt*55).setRotation(Math.sin(T.kt*4)*.12); }
+  // طناب‌ها
+  const rg = T.ropeG.clear();
+  S.ropes.forEach(r => {
+    const path = () => { rg.beginPath(); r.trail.forEach((q,i) => i ? rg.lineTo(q[0],q[1]) : rg.moveTo(q[0],q[1])); rg.lineTo(r.x,r.y); rg.strokePath(); };
+    rg.lineStyle(5,0x2a1630); path(); rg.lineStyle(3,0xc9a063); path();
+    rg.lineStyle(5,0x2a1630); rg.strokeCircle(r.x,r.y+6,7); rg.lineStyle(3,0xc9a063); rg.strokeCircle(r.x,r.y+6,7);
+  });
   // ابرها
   T.clouds.forEach(c => { c.x += c.sp*sec; if(c.x > 740) c.x = -110; c.im.setPosition(c.x,c.y); });
   birdUpdate(sec,t);
@@ -213,10 +240,11 @@ function update(t,dt){ try{ _update.call(this,t,dt); }catch(er){ if(_ue++ < 3) s
 /* ============ رابط ============ */
 const ov = document.getElementById('ov');
 function show(html,bare){ ov.innerHTML = `<div class="card${bare?' bare':''}">${html}</div>`; ov.hidden = false; L = R = J = false; }
+const START_HTML = `<button class="big" onclick="startGame()">▶ START</button>`;
 function startGame(){ ac(); startMusic(); SFX.start(); ov.hidden = true; started = true; }
-function again(){ ov.hidden = true; started = true; game.scene.getScene('main').scene.restart(); }
+function toStart(){ started = false; won = false; show(START_HTML,true); game.scene.getScene('main').scene.restart(); }
 function boot(){
   game = new Phaser.Game({type:Phaser.CANVAS,parent:'g',width:1280,height:720,backgroundColor:'#7cc4f5',scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},scene:{key:'main',create,update}});
-  show(`<button class="big" onclick="startGame()">▶ START</button>`,true);
+  show(START_HTML,true);
 }
 loadArt().then(boot,boot);
